@@ -34,6 +34,8 @@ The executive summary includes:
 
 **TL;DR**: Email marketing is profitable (11.2% true effect, not 16.0%), with expected +$1.52M (+21.7%) profit improvement.
 
+**📊 See also**: [VISUALIZATION_GUIDE.md](VISUALIZATION_GUIDE.md) for detailed explanations of our 28+ plots and what they prove.
+
 ---
 
 ### Method Comparison
@@ -77,6 +79,23 @@ Key Findings:
 ❌ DiD fails (wrong study design)
 ❌ Naive severely biased (68% overestimate)
 ```
+
+---
+
+## 📊 Quick Visualization Reference
+
+### Key Plots by Question
+
+**Need to understand...?**
+- The bias problem → See `03_naive_vs_true_comparison.png` (68% overestimate!)
+- If PSM works → See `love_plot_balance.png` (6/8 covariates balanced)
+- Which method is best → See `robustness_analysis.png` (PSM closest to truth)
+- Business impact → See `business_analysis.png` (+$1.52M profit)
+- Why DiD fails → See `did_results_comprehensive.png` (wrong method)
+- IPW issues → See `ipw_diagnostics.png` (unstable weights)
+- Heterogeneity → See `doubly_robust_results.png` (varies by segment)
+
+**📖 Complete Guide**: See [VISUALIZATION_GUIDE.md](VISUALIZATION_GUIDE.md) for detailed explanations of all 28+ plots.
 
 ---
 
@@ -209,7 +228,8 @@ Causal-Impact-of-Email-Marketing/
 │
 ├── 📖 Documentation/
 │   ├── README.md                     # This file ⭐
-│   └── EXECUTIVE_SUMMARY.md          # Complete executive summary ⭐
+│   ├── EXECUTIVE_SUMMARY.md          # Complete executive summary ⭐
+│   └── VISUALIZATION_GUIDE.md        # What our 28+ plots reveal ⭐
 │
 ├── 🎓 examples/                      # Usage examples
 │   └── modular_usage_example.py      # Modular toolkit demo

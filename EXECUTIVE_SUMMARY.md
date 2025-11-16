@@ -110,6 +110,98 @@ The email treatment effect varies significantly across customer segments:
 
 ---
 
+## 📊 Visual Evidence: What the Plots Show
+
+### Critical Visual Findings
+
+**The Shocking Truth** (`03_naive_vs_true_comparison.png`)
+```
+Naive Estimate: 16.0% ████████████████████
+True Effect:    9.5%  ████████████
+Bias:           6.5pp ██████ (68% overestimate!)
+```
+
+**PSM Balance Achievement** (`love_plot_balance.png`)
+```
+Before Matching:  1/8 covariates balanced  ❌
+After Matching:   6/8 covariates balanced  ✅
+Balance Improvement: 67.3%
+```
+
+**Method Comparison** (`robustness_analysis.png`)
+```
+Method    Estimate   CI           Bias     Valid?
+─────────────────────────────────────────────────────
+PSM       11.2%     [10.8-11.5]  +1.7pp   ✅ BEST
+AIPW      12.7%     [12.0-13.3]  +3.2pp   ✅
+T-Learner 12.8%     [12.1-13.5]  +3.3pp   ✅
+IPW       13.6%     [12.8-14.3]  +4.1pp   ⚠️
+Naive     16.0%     [15.7-16.4]  +6.5pp   ❌
+DiD        0.5%     [-1.7-2.7]   -9.3pp   ❌
+```
+
+**Business Impact** (`business_analysis.png`)
+```
+Segment          ROI        Effect     Recommendation
+─────────────────────────────────────────────────────────
+Loyal (Q4)      103,677%    18.6%      ⭐⭐⭐ Prioritize
+Medium RFM      91,645%     17.1%      ⭐⭐⭐ Focus
+High RFM        88,281%     16.5%      ⭐⭐⭐ Target
+Low RFM         43,404%      9.0%      ⭐⭐ Include
+```
+
+**Balance Visualization** (Love Plot Concept)
+```
+Covariate Balance (Standardized Mean Difference)
+         Before    After    Good?
+         ──────    ─────    ──────
+RFM       0.245 →  0.045    ✅
+Tenure    0.189 →  0.067    ✅
+Recency   0.506 →  0.040    ✅
+...       ...    ...       ✅
+
+Threshold: |std diff| < 0.1 for good balance
+```
+
+### What These Visuals Prove
+
+✅ **Confounding is Real**
+- Email recipients are different (higher RFM, more recent purchases)
+- Visual proof: `02_confounding_visualizations.png`
+
+✅ **PSM Creates Balance**
+- 6/8 covariates achieve balance (vs 1/8 before)
+- Visual proof: `love_plot_balance.png`
+
+✅ **Bias Dramatically Reduced**
+- From 6.5pp to 1.7pp (74% improvement)
+- Visual proof: `psm_results_comprehensive.png`
+
+✅ **Methods Agree**
+- Valid methods cluster around 11-14%
+- Visual proof: `robustness_analysis.png`
+
+✅ **Business Case is Strong**
+- All segments profitable, +$1.52M opportunity
+- Visual proof: `business_analysis.png`
+
+### Key Visual Metrics
+
+| Metric | Value | Evidence |
+|--------|-------|----------|
+| Match Rate | 100% | `psm_results_comprehensive.png` |
+| Balance Improvement | 67.3% | `love_plot_balance.png` |
+| Bootstrap Samples | 1,000 | `psm_results_comprehensive.png` |
+| Covariates Balanced | 6/8 | `love_plot_balance.png` |
+| IPW Max Weight | 13.07 | `ipw_diagnostics.png` |
+| Parallel Trends | p=0.95 | `did_parallel_trends.png` |
+| AUC | 0.661 | `propensity_score_diagnostics.png` |
+| CATE Range | -3.3% to +22.6% | `doubly_robust_results.png` |
+
+*[All 28+ visualizations available in src/visualization/ directory. See VISUALIZATION_GUIDE.md for complete explanations.]*
+
+---
+
 ## 💡 Strategic Recommendations
 
 ### Immediate Actions (Next 30 Days)
@@ -286,6 +378,8 @@ The email treatment effect varies significantly across customer segments:
 - Interactive dashboard: `streamlit_app.py`
 - Validation notebook: `notebooks/00_MASTER_VALIDATION.ipynb`
 - Comprehensive tests: `tests/test_causal_methods.py`
+- Visualization guide: `VISUALIZATION_GUIDE.md`
+- Complete plots: `src/visualization/` (28+ plots)
 
 ---
 
