@@ -2,11 +2,11 @@
 
 This directory contains all visualizations generated from the causal inference project.
 
-## 📊 Total Visualizations: 15 plots
+## 📊 Total Visualizations: 19+ plots
 
 ---
 
-## Python Scripts (6 plots)
+## Python Scripts (9+ plots)
 
 ### 1. Naive Analysis (`src/data/naive_analysis_save.py`)
 Generated when running the naive analysis to demonstrate confounding bias.
@@ -33,19 +33,64 @@ Generated when running the naive analysis to demonstrate confounding bias.
 - Bias decomposition visualization
 - Shows 16.0% naive vs 9.5% true effect
 
-### 2. Propensity Score Matching (`src/causal/propensity_score_matching_save.py`)
-Generated when running PSM to recover true causal effects from confounded data.
+### 2. Propensity Score Estimation (`src/causal/estimate_propensity_scores.py`)
+Complete propensity score estimation workflow with diagnostics.
 
-**Plot 4: 04_propensity_scores.png**
+**Plot 4: propensity_score_diagnostics.png**
+- 12-panel comprehensive diagnostic plots:
+  - Propensity score distributions by treatment group
+  - ROC curve (AUC = 0.661)
+  - Box plots and violin plots
+  - Q-Q plots and cumulative distributions
+  - Standardized differences (before matching)
+  - Feature vs propensity scatter plots
+
+**Plot 5: propensity_score_summary.png**
+- 4-panel summary visualization:
+  - Distribution comparison (histograms)
+  - Box plots with statistics
+  - Coefficient importance (bar chart)
+  - Summary statistics by group
+
+### 3. Quick Start Guide (`src/causal/quick_start_propensity_scores.py`)
+Quick visualization of propensity score usage and interpretation.
+
+**Plot 6: propensity_scores_quick_start.png**
+- 3-panel quick reference:
+  - Distribution by treatment group
+  - Box plots comparison
+  - Propensity vs outcome scatter plot
+
+### 4. Propensity Score Matching v2 (`src/causal/propensity_score_matching_v2.py`)
+Comprehensive PSM implementation with Love plots and bootstrap CI.
+
+**Plot 7: love_plot_balance.png**
+- Love plot showing standardized differences before/after matching
+- Horizontal bar chart with good balance threshold (±0.1)
+- Clear visualization of balance improvement for all covariates
+
+**Plot 8: psm_results_comprehensive.png**
+- 6-panel comprehensive results:
+  1. Covariate balance (Love plot)
+  2. Treatment effect estimates (Naive vs PSM vs True)
+  3. 95% confidence interval with true effect marker
+  4. Bootstrap distribution histogram
+  5. Balance improvement by covariate
+  6. Summary statistics panel
+
+### 5. Legacy Propensity Score Matching (`src/causal/propensity_score_matching_save.py`)
+Original PSM implementation (superseded by v2).
+
+**Plot 9: 04_propensity_scores.png**
 - Propensity score distribution by group
 - ROC curve for propensity model (AUC = 0.661)
 
-**Plot 5: 05_covariate_balance.png**
+**Plot 10: 05_covariate_balance.png**
 - Before vs After matching standardized differences
 - Absolute balance improvement comparison
 - Shows all 5 features improved after matching
 
-**Plot 6: 06_psm_results_summary.png**
+**Plot 11: 06_psm_results_summary.png**
 - Effect estimates comparison (Naive vs PSM vs True)
 - Absolute bias comparison
 - 95% confidence interval
@@ -101,12 +146,24 @@ Demonstrates why naive comparisons fail with confounding.
 - **Bias**: 6.5 percentage points (68% overestimate!)
 - **Cause**: Email recipients are systematically different (higher RFM, more recent purchases)
 
-### Propensity Score Matching (Solution)
-- **Method**: Match customers with similar propensity scores
+### Propensity Score Estimation (Foundation)
+- **Model**: Logistic regression P(email | customer features)
+- **Performance**: AUC = 0.661 (moderate predictive power)
+- **Key Driver**: Days since last purchase (coef = -0.422)
+- **Common Support**: Excellent overlap (99.98% of units)
+- **Features**: 5 confounders (recency, frequency, monetary, tenure, RFM)
+
+### Propensity Score Matching v2 (Solution)
+- **Method**: 1:1 nearest neighbor with caliper = 0.0078
+- **Matched Pairs**: 112,722 (100% match rate)
 - **Result**: Recover 11.2% effect (close to true 9.5%!)
 - **Bias Reduction**: From 6.5% to 1.7% (74% improvement!)
-- **Balance**: All 5 features achieved better balance after matching
-- **Validation**: Propensity model AUC = 0.661, 100% match rate
+- **Balance Improvement**:
+  - Before: 1/8 covariates well-balanced
+  - After: 6/8 covariates well-balanced
+  - Mean |Std Diff| reduced by 67.3%
+- **Statistical Significance**: p < 0.0001, 95% CI: [10.8%, 11.5%]
+- **Key Feature**: `days_since_last_purchase` had largest improvement (0.506 → 0.040)
 
 ---
 
@@ -118,13 +175,18 @@ src/visualization/
 ├── extract_notebook_plots.py           # Script to extract plots from notebooks
 ├── save_plots.py                       # Utility for saving matplotlib plots
 │
-├── Python Scripts Output (6 plots):
-│   ├── 01_naive_comparison.png
-│   ├── 02_confounding_visualizations.png
-│   ├── 03_naive_vs_true_comparison.png
-│   ├── 04_propensity_scores.png
-│   ├── 05_covariate_balance.png
-│   └── 06_psm_results_summary.png
+├── Python Scripts Output (11+ plots):
+│   ├── 01_naive_comparison.png                 # Naive analysis
+│   ├── 02_confounding_visualizations.png       # Confounding demo
+│   ├── 03_naive_vs_true_comparison.png         # Bias visualization
+│   ├── propensity_score_diagnostics.png        # 12-panel PS diagnostics
+│   ├── propensity_score_summary.png            # 4-panel PS summary
+│   ├── propensity_scores_quick_start.png       # Quick reference
+│   ├── love_plot_balance.png                   # Love plot (balance)
+│   ├── psm_results_comprehensive.png           # 6-panel PSM results
+│   ├── 04_propensity_scores.png                # Legacy PSM
+│   ├── 05_covariate_balance.png                # Legacy balance
+│   └── 06_psm_results_summary.png              # Legacy summary
 │
 └── Notebook Plots (9 plots):
     ├── 01_initial_eda_plot_001.png
@@ -148,7 +210,19 @@ src/visualization/
 source .venv/bin/activate
 python src/data/naive_analysis_save.py
 
-# Propensity Score Matching
+# Propensity Score Estimation
+source .venv/bin/activate
+python src/causal/estimate_propensity_scores.py
+
+# Quick Start Guide
+source .venv/bin/activate
+python src/causal/quick_start_propensity_scores.py
+
+# Propensity Score Matching v2 (Recommended)
+source .venv/bin/activate
+python src/causal/propensity_score_matching_v2.py
+
+# Legacy Propensity Score Matching (Superseded)
 source .venv/bin/activate
 python src/causal/propensity_score_matching_save.py
 ```
@@ -175,29 +249,50 @@ python src/visualization/extract_notebook_plots.py
    - See 02_confounding_visualizations.png
    - See 03_naive_vs_true_comparison.png
 
-2. **Learn the Solution**: See PSM in action
-   - See 04_propensity_scores.png
-   - See 05_covariate_balance.png
-   - See 06_psm_results_summary.png
+2. **Foundation**: Learn Propensity Score Estimation
+   - See propensity_score_diagnostics.png (12-panel diagnostics)
+   - See propensity_score_summary.png (4-panel summary)
+   - See propensity_scores_quick_start.png (quick reference)
 
-3. **Deep Dive**: Explore notebooks for detailed analysis
+3. **Solution**: See PSM in action (v2 - recommended)
+   - See love_plot_balance.png (balance visualization)
+   - See psm_results_comprehensive.png (6-panel results)
+   - Key: 74% bias reduction achieved!
+
+4. **Deep Dive**: Explore notebooks for detailed analysis
    - See 01_initial_eda plots (data exploration)
    - See 02_email_campaign_simulation plots (confounding)
    - See 03_naive_analysis_fails plots (problem demonstration)
+
+5. **Legacy Methods**: Original PSM implementation
+   - See 04_propensity_scores.png
+   - See 05_covariate_balance.png
+   - See 06_psm_results_summary.png
 
 ---
 
 ## 📊 Summary Statistics
 
-**Total Visualizations**: 15
-- Python scripts: 6 plots
+**Total Visualizations**: 20+
+- Python scripts: 11+ plots
 - Jupyter notebooks: 9 plots
 
 **Key Results Visualized**:
-- Naive effect: 16.0% (biased)
-- PSM effect: 11.2% (causal)
+- Naive effect: 16.0% (biased, 6.5% absolute bias)
+- PSM v2 effect: 11.2% (causal, 1.7% absolute bias)
 - True effect: 9.5% (ground truth)
-- Bias reduction: 74%
+- **Bias reduction: 74.1%** ✅
+
+**Propensity Score Model**:
+- AUC: 0.661
+- Key predictor: Days since last purchase (coef = -0.422)
+- Common support: 99.98% of units
+
+**PSM Matching Results**:
+- Matched pairs: 112,722 (100% match rate)
+- Caliper: 0.0078
+- Balance: 6/8 covariates well-balanced (vs 1/8 before)
+- Mean |Std Diff| reduction: 67.3%
 
 **Visualization Methods**:
 - Bar charts
@@ -206,7 +301,10 @@ python src/visualization/extract_notebook_plots.py
 - Box plots
 - ROC curves
 - Confidence intervals
+- Love plots
 - Balance comparisons
+- Bootstrap distributions
+- Comprehensive 6-panel results
 
 ---
 

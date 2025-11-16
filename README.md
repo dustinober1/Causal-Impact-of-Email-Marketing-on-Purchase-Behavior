@@ -26,13 +26,16 @@ Causal-Impact-of-Email-Marketing-on-Purchase-Behavior/
 │       ├── customer_rfm_analysis.csv                # RFM segmentation results
 │       ├── customer_week_panel.csv                  # Customer-week panel for causal analysis (6.4 MB)
 │       ├── simulated_email_campaigns.csv            # Simulated email campaigns with confounding (17 MB)
+│       ├── data_with_propensity_scores.csv          # Data with estimated propensity scores (19 MB)
+│       ├── propensity_model.json                    # Propensity model coefficients and parameters
 │       ├── ground_truth.json                        # True causal effect parameters
 │       └── simulation_summary.json                  # Simulation statistics
 ├── notebooks/
 │   ├── 01_initial_eda.ipynb                              # Exploratory Data Analysis
 │   ├── 02_email_campaign_simulation.ipynb                # Email campaign simulation with confounding
 │   ├── 03_naive_analysis_fails.ipynb                     # Why naive comparisons fail with confounding
-│   └── 04_propensity_score_matching.ipynb                # PSM: Recovering true causal effects
+│   ├── 04_propensity_score_matching.ipynb                # PSM: Recovering true causal effects
+│   └── 05_propensity_score_estimation.ipynb              # Propensity score estimation tutorial
 ├── src/
 │   ├── data/
 │   │   ├── load_data.py                                  # Data loading & preprocessing
@@ -40,8 +43,12 @@ Causal-Impact-of-Email-Marketing-on-Purchase-Behavior/
 │   │   ├── simulate_email_campaigns.py                   # Email campaign simulation
 │   │   └── naive_analysis.py                             # Naive analysis demonstration
 │   ├── causal/
-│   │   └── propensity_score_matching.py                  # PSM implementation
-│   └── visualization/                                    # Plotting & visualization
+│   │   ├── estimate_propensity_scores.py                 # Propensity score estimation with diagnostics
+│   │   ├── propensity_score_matching.py                  # Legacy PSM implementation
+│   │   ├── propensity_score_matching_v2.py               # PSM v2: Comprehensive implementation
+│   │   ├── propensity_score_summary.py                   # Quick visualization
+│   │   └── quick_start_propensity_scores.py              # Usage guide and examples
+│   └── visualization/                                    # Plotting & visualization (20+ plots)
 ├── .venv/                                               # Python virtual environment
 └── README.md                                            # This file
 ```
@@ -132,25 +139,99 @@ This will show:
 
 **Essential learning** before implementing causal inference methods!
 
-### 7. Propensity Score Matching (PSM): Recover the True Causal Effect!
+### 7. Propensity Score Estimation: Foundation for Causal Inference
 ```bash
-# Run PSM to recover true causal effect from confounded data
-.venv/bin/python src/causal/propensity_score_matching.py
+# Estimate propensity scores with comprehensive diagnostics
+.venv/bin/python src/causal/estimate_propensity_scores.py
 ```
 
 This script will:
-- Estimate propensity scores using logistic regression
-- Match treated and control units with similar characteristics
-- Calculate causal effect on matched sample
-- Validate against ground truth
-- Show covariate balance improvement
-- Compare to naive estimate
+- Fit logistic regression: P(email | customer features)
+- Use 5 confounding variables (recency, frequency, monetary, tenure, RFM)
+- Generate propensity scores for all observations
+- Create comprehensive diagnostic plots (12 panels)
+- Check common support (overlap)
+- Assess model performance (AUC = 0.661)
+- Save data with propensity scores
 
 **Expected Results:**
-- Naive effect: 16.0% (severely biased!)
-- PSM effect: ~11.2% (close to true 9.5%!)
-- Bias reduced from 6.5% to ~1.7%
-- All 5 features achieve better balance after matching
+- Propensity scores: Range [0.456, 0.980]
+- Treated mean: 0.824, Control mean: 0.787
+- AUC: 0.661 (moderate predictive power)
+- Common support: 99.98% overlap
+- Key driver: Days since last purchase (coef = -0.422)
+
+**Quick visualization:**
+```bash
+# Quick guide to using propensity scores
+.venv/bin/python src/causal/quick_start_propensity_scores.py
+```
+
+**Interactive tutorial:**
+```bash
+# Step-by-step tutorial
+jupyter notebook notebooks/05_propensity_score_estimation.ipynb
+```
+
+**Key Insights:**
+- Days since last purchase is strongest predictor (recent buyers get emails)
+- Email recipients have higher baseline purchase probability
+- Model has moderate predictive power (AUC = 0.661)
+- Excellent common support - almost all units can be matched
+
+**Output files:**
+- `data/processed/data_with_propensity_scores.csv` (19 MB, with propensity scores)
+- `data/processed/propensity_model.json` (model coefficients and parameters)
+- `src/visualization/propensity_score_diagnostics.png` (12-panel diagnostics)
+- `src/visualization/propensity_score_summary.png` (4-panel summary)
+
+### 8. Propensity Score Matching v2 (Recommended): Recover the True Causal Effect!
+```bash
+# Run comprehensive PSM with balance checking and bootstrap CI
+.venv/bin/python src/causal/propensity_score_matching_v2.py
+```
+
+This advanced implementation includes:
+- **Nearest neighbor matching** with caliper = 0.0078
+- **Comprehensive balance diagnostics** (standardized mean differences)
+- **Love plots** for balance visualization
+- **Bootstrap confidence intervals** (1,000 samples)
+- **Comparison to ground truth** (validation)
+
+**Features:**
+- Class-based `PropensityScoreMatcher` implementation
+- 1:1 matching with replacement option
+- Balance checking for all covariates
+- Statistical significance testing
+- Bias calculation and reduction metrics
+
+**Expected Results:**
+- **Matched Pairs**: 112,722 (100% match rate)
+- **Balance Improvement**: 6/8 covariates well-balanced (vs 1/8 before)
+- **Mean |Std Diff| Reduction**: 67.3%
+- **Treatment Effect**: 11.2% (CI: 10.8% - 11.5%)
+- **Bias Reduction**: 74.1% (from 6.5% to 1.7%)
+- **Statistical Significance**: p < 0.0001
+
+**Visualizations Created:**
+- `love_plot_balance.png` - Love plot showing balance improvement
+- `psm_results_comprehensive.png` - 6-panel comprehensive results
+
+**Validation:**
+```
+Naive Estimate: 16.0% (6.5% bias)
+PSM Estimate:  11.2% (1.7% bias)
+True Effect:    9.5%
+Bias Reduction: 74.1% ✅
+```
+
+### 9. Propensity Score Matching (Legacy): Original Implementation
+```bash
+# Run original PSM implementation
+.venv/bin/python src/causal/propensity_score_matching.py
+```
+
+**Note**: This is the original implementation. Use **propensity_score_matching_v2.py** for the most comprehensive analysis with Love plots and bootstrap CI.
 
 **Interactive analysis:**
 ```bash
@@ -165,7 +246,7 @@ This comprehensive notebook walks through:
 5. Checking covariate balance
 6. Validating against ground truth
 
-### 8. Load and Explore Data Programmatically
+### 10. Load and Explore Data Programmatically
 ```python
 import sys
 sys.path.append('src/data/')
@@ -734,36 +815,143 @@ Now we understand WHY we need causal inference methods!
 
 ---
 
-### ✅ **Completed: Propensity Score Matching**
+### ✅ **Completed: Propensity Score Estimation**
 
-We've successfully implemented and validated PSM:
+We've created a comprehensive propensity score estimation framework:
 
 **Implementation:**
-- **Script**: `src/causal/propensity_score_matching.py`
-- **Notebook**: `notebooks/04_propensity_score_matching.ipynb`
-- **Features**: Logistic regression with 5 customer characteristics
-- **Matching**: Nearest neighbor with caliper = 0.1
+- **Script**: `src/causal/estimate_propensity_scores.py`
+- **Notebook**: `notebooks/05_propensity_score_estimation.ipynb`
+- **Quick Guide**: `src/causal/quick_start_propensity_scores.py`
+- **Features**: Logistic regression with 5 confounding variables
 
 **Results:**
-- **Naive Estimate**: 16.0% (severely biased!)
-- **PSM Estimate**: 11.2% (much closer to true 9.5%!)
-- **Bias Reduction**: From 6.5% to 1.7% (74% improvement!)
-- **Balance**: All 5 features improved (standardized diffs < 0.1)
-- **Significance**: T = 60.15, p < 0.001
+- **Model Performance**: AUC = 0.661 (moderate predictive power)
+- **Sample Size**: 137,888 observations
+- **Treatment Rate**: 81.7% received emails
+- **Key Predictor**: Days since last purchase (coef = -0.422)
+- **Common Support**: 99.98% overlap (excellent!)
 
 **Validation:**
-- ✅ Propensity model AUC = 0.661 (good predictive power)
-- ✅ 112,722 matched pairs (100% match rate)
-- ✅ Covariate balance dramatically improved
-- ✅ Effect estimate close to ground truth (10.0%)
+- ✅ Coefficients match simulation design
+- ✅ Model diagnostics complete
+- ✅ Propensity scores saved to dataframe
+- ✅ Ready for matching and weighting
 
 **What We Learned:**
-- PSM transforms confounded data into "randomized" experiment
-- Covariate balance is essential for valid inference
-- Matching quality determines success
-- Cannot verify unconfoundedness assumption
+- Days since last purchase is strongest predictor
+- Recent buyers much more likely to receive emails
+- Propensity scores enable causal inference
+- Common support verified - matching is feasible
 
-This proves **causal inference works** - we can recover truth from biased data!
+This provides the **foundation for all propensity score methods**!
+
+---
+
+### ✅ **Completed: Propensity Score Matching v2 (Recommended)**
+
+We've implemented a comprehensive PSM framework with advanced diagnostics:
+
+**Implementation:**
+- **Script**: `src/causal/propensity_score_matching_v2.py` (29 KB)
+- **Class**: `PropensityScoreMatcher` with full workflow
+- **Features**: Nearest neighbor matching with caliper
+- **Diagnostics**: Balance checking, Love plots, bootstrap CI
+
+**Matching Results:**
+- **Matched Pairs**: 112,722 (100% match rate)
+- **Caliper**: 0.0078 (0.1 × std of propensity scores)
+- **Mean Distance**: 0.0000 (excellent quality)
+- **Within Caliper**: 100% of matches
+
+**Balance Achievement:**
+- **Before**: 1/8 covariates well-balanced
+- **After**: 6/8 covariates well-balanced
+- **Improvement**: +5 covariates balanced
+- **Mean |Std Diff| Reduction**: 67.3%
+
+**Effect Recovery:**
+- **Naive Estimate**: 16.0% (6.5% bias)
+- **PSM v2 Estimate**: 11.2% (1.7% bias)
+- **True Effect**: 9.5%
+- **Bias Reduction**: 74.1% ✅
+- **95% CI**: [10.8%, 11.5%]
+- **P-value**: < 0.0001 (highly significant)
+
+**Visualizations:**
+- ✅ `love_plot_balance.png` - Love plot showing balance
+- ✅ `psm_results_comprehensive.png` - 6-panel results
+
+**Documentation:**
+- ✅ `PROPENSITY_SCORE_MATCHING_SUMMARY.md` - Detailed analysis
+- ✅ `PROJECT_EXECUTION_SUMMARY.md` - Complete overview
+
+**What We Learned:**
+- PSM successfully recovers causal effect from confounded data
+- Love plots provide clear balance visualization
+- Bootstrap CI gives robust uncertainty estimates
+- 74% bias reduction demonstrates method effectiveness
+
+This proves **modern causal inference works** - we can recover truth from biased data!
+
+---
+
+### ✅ **Completed: Propensity Score Matching (Legacy)**
+
+We've also maintained the original PSM implementation:
+
+**Implementation:**
+- **Script**: `src/causal/propensity_score_matching.py` (legacy)
+- **Notebook**: `notebooks/04_propensity_score_matching.ipynb`
+- **Purpose**: Educational reference
+
+**Note**: This implementation is superseded by **propensity_score_matching_v2.py** which includes Love plots, bootstrap CI, and comprehensive diagnostics.
+
+---
+
+### 📚 **Comprehensive Documentation & Visualizations**
+
+We've created extensive documentation and visualizations for the complete workflow:
+
+**Documentation Files (5):**
+- ✅ `README.md` (this file) - Project overview and quick start
+- ✅ `PROPENSITY_SCORE_SUMMARY.md` - Propensity score estimation guide (12 KB)
+- ✅ `PROPENSITY_SCORE_MATCHING_SUMMARY.md` - PSM analysis summary (14 KB)
+- ✅ `PROJECT_EXECUTION_SUMMARY.md` - Complete project overview (14 KB)
+- ✅ `src/visualization/README.md` - Visualization gallery guide (updated)
+
+**Visualizations (20+ plots):**
+
+**Propensity Score Estimation:**
+- `propensity_score_diagnostics.png` (681 KB) - 12-panel comprehensive diagnostics
+- `propensity_score_summary.png` (128 KB) - 4-panel summary
+- `propensity_scores_quick_start.png` (66 KB) - Quick reference guide
+
+**Propensity Score Matching v2:**
+- `love_plot_balance.png` (93 KB) - Love plot showing balance improvement
+- `psm_results_comprehensive.png` (240 KB) - 6-panel comprehensive results
+
+**Legacy Visualizations:**
+- `01_naive_comparison.png` - Naive analysis demonstration
+- `02_confounding_visualizations.png` - Confounding visualization
+- `03_naive_vs_true_comparison.png` - Bias comparison
+- `04_propensity_scores.png` - Legacy PSM plots
+- `05_covariate_balance.png` - Balance comparison
+- `06_psm_results_summary.png` - Results summary
+
+**Notebook Plots (9):**
+- EDA, simulation, and analysis visualizations
+
+**Total Size**: ~2.5 MB of visualizations
+
+**Key Insights from Visualizations:**
+- **Love Plots**: Clear balance improvement visualization
+- **Diagnostic Panels**: Comprehensive model assessment
+- **Effect Comparisons**: Naive vs PSM vs True side-by-side
+- **Bootstrap Distributions**: Uncertainty quantification
+- **Balance Metrics**: Quantified improvement
+
+All visualizations saved to `src/visualization/` and indexed in `src/visualization/README.md`!
 
 ---
 
@@ -814,13 +1002,21 @@ Once methods are validated:
 
 ### 🎯 **Learning Path**
 
-1. **Understand confounding** (Notebook 02)
-2. **See why naive analysis fails** (Notebook 03)
-3. **Implement PSM** ✅ (Notebook 04) - COMPLETED!
-4. **Learn IPW** (Notebook 05) - Coming next!
-5. **Try regression adjustment**
-6. **Advance to DML**
-7. **Apply to real data**
+1. **Understand confounding** (Notebook 02) ✅
+2. **See why naive analysis fails** (Notebook 03) ✅
+3. **Estimate propensity scores** (Notebook 05) ✅
+4. **Implement PSM v2** (propensity_score_matching_v2.py) ✅ - COMPLETED!
+5. **Learn IPW** (Notebook 06) - Coming next!
+6. **Try regression adjustment**
+7. **Advance to DML**
+8. **Apply to real data**
+
+**Recommended Learning Order:**
+1. Run `quick_start_propensity_scores.py` for quick overview
+2. Study `notebooks/05_propensity_score_estimation.ipynb` for detailed tutorial
+3. Execute `propensity_score_matching_v2.py` for comprehensive analysis
+4. Review `PROPENSITY_SCORE_MATCHING_SUMMARY.md` for interpretation
+5. Explore `src/visualization/` for all plots and insights
 
 ### 📈 **Key Insights from Simulation**
 
