@@ -1110,6 +1110,14 @@ This project now implements **6 comprehensive causal inference methods** for ana
 - **RFM Segments**: Small but significant differences
 - **Key Learning**: Treatment effects vary; useful for targeting
 
+#### 7. **Robustness Analysis** - SENSITIVITY TESTING
+- **Script**: `src/causal/robustness_analysis.py` (22 KB)
+- **E-Value**: 2.58 (moderate robustness to unmeasured confounding)
+- **Placebo Test**: FAILED (concerning pre-treatment effects)
+- **Subgroup Analysis**: Effects range 9% (low RFM) to 18% (high tenure)
+- **Method Comparison**: PSM and AIPW most reliable
+- **Key Learning**: Results moderately robust but interpret with caution
+
 ### 📊 **Method Comparison Summary**
 
 | Method | Estimate | Bias | Rank | Use Case |
@@ -1130,7 +1138,8 @@ This project now implements **6 comprehensive causal inference methods** for ana
 3. ✅ `DOUBLY_ROBUST_SUMMARY.md` (16 KB) - AIPW and T-Learner implementation
 4. ✅ `INVERSE_PROBABILITY_WEIGHTING_SUMMARY.md` (14 KB) - IPW with weight diagnostics
 5. ✅ `METHOD_COMPARISON_SUMMARY.md` (18 KB) - **Complete comparison of all 6 methods**
-6. ✅ `PROJECT_EXECUTION_SUMMARY.md` (14 KB) - Full project overview
+6. ✅ `ROBUSTNESS_ANALYSIS_SUMMARY.md` (16 KB) - **Sensitivity testing and validation**
+7. ✅ `PROJECT_EXECUTION_SUMMARY.md` (14 KB) - Full project overview
 
 ### 🎯 **Final Results**
 
@@ -1165,6 +1174,10 @@ python src/causal/inverse_probability_weighting.py
 
 # 5. AIPW (doubly robust)
 python src/causal/doubly_robust.py
+
+# 6. Robustness Analysis (sensitivity testing)
+python src/causal/robustness_analysis.py
 ```
 
 Compare results in `METHOD_COMPARISON_SUMMARY.md`!
+**New**: Run `robustness_analysis.py` for comprehensive sensitivity testing!
