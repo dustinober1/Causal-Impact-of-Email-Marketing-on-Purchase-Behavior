@@ -1,0 +1,9 @@
+{
+  "base_email_effect": 0.1,
+  "interaction_effect_medium_rfm": 0.05,
+  "interaction_effect_high_rfm": 0.02,
+  "interaction_effect_low_rfm": -0.03,
+  "email_effect_noise": 0.02,
+  "confounding_rules": "assignment_based_on_customer_characteristics",
+  "description": "Email effect stronger for medium RFM scores (8-12)"
+}

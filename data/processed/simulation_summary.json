@@ -1,0 +1,10 @@
+{
+  "total_observations": 137888,
+  "unique_customers": 4213,
+  "email_send_rate": 0.8174895567417034,
+  "observed_purchase_rate": 0.31746779995358554,
+  "naive_email_effect": 0.160326832398478,
+  "true_ate": 0.09489542612465968,
+  "confounding_detected": true,
+  "random_seed": 42
+}

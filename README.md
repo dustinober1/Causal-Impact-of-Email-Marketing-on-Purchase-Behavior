@@ -19,22 +19,27 @@ This project implements advanced causal inference techniques to measure the caus
 Causal-Impact-of-Email-Marketing-on-Purchase-Behavior/
 ├── data/
 │   ├── raw/
-│   │   └── online_retail.xlsx                 # Original UCI dataset (22.6 MB)
+│   │   └── online_retail.xlsx                       # Original UCI dataset (22.6 MB)
 │   └── processed/
-│       ├── cleaned_online_retail.csv          # Cleaned transaction data
-│       ├── daily_customer_purchases.csv       # Daily aggregated customer data
-│       ├── customer_rfm_analysis.csv          # RFM segmentation results
-│       └── customer_week_panel.csv            # Customer-week panel for causal analysis (6.4 MB)
+│       ├── cleaned_online_retail.csv                # Cleaned transaction data
+│       ├── daily_customer_purchases.csv             # Daily aggregated customer data
+│       ├── customer_rfm_analysis.csv                # RFM segmentation results
+│       ├── customer_week_panel.csv                  # Customer-week panel for causal analysis (6.4 MB)
+│       ├── simulated_email_campaigns.csv            # Simulated email campaigns with confounding (17 MB)
+│       ├── ground_truth.json                        # True causal effect parameters
+│       └── simulation_summary.json                  # Simulation statistics
 ├── notebooks/
-│   └── 01_initial_eda.ipynb                   # Exploratory Data Analysis
+│   ├── 01_initial_eda.ipynb                         # Exploratory Data Analysis
+│   └── 02_email_campaign_simulation.ipynb           # Email campaign simulation with confounding
 ├── src/
 │   ├── data/
-│   │   ├── load_data.py                       # Data loading & preprocessing
-│   │   └── create_panel_data.py               # Feature engineering & panel creation
-│   ├── causal/                                # Causal inference models
-│   └── visualization/                         # Plotting & visualization
-├── .venv/                                     # Python virtual environment
-└── README.md                                  # This file
+│   │   ├── load_data.py                             # Data loading & preprocessing
+│   │   ├── create_panel_data.py                     # Feature engineering & panel creation
+│   │   └── simulate_email_campaigns.py              # Email campaign simulation
+│   ├── causal/                                      # Causal inference models
+│   └── visualization/                               # Plotting & visualization
+├── .venv/                                           # Python virtual environment
+└── README.md                                        # This file
 ```
 
 ## 📊 Dataset
@@ -91,7 +96,25 @@ This script will:
 - Create a panel dataset ready for causal inference
 - Save as `data/processed/customer_week_panel.csv`
 
-### 5. Load and Explore Data Programmatically
+### 5. Simulate Email Campaigns with Realistic Confounding
+```bash
+# Generate simulated email campaigns with true causal effect
+.venv/bin/python src/data/simulate_email_campaigns.py
+```
+
+This script will:
+- Create realistic email assignment based on customer characteristics (confounding!)
+- Embed a TRUE causal effect (+10% base, varying by RFM score)
+- Generate outcomes with both observed and counterfactual states
+- Save ground truth for validation
+- Output: `simulated_email_campaigns.csv` (17 MB, ready for causal inference!)
+
+**Why simulate?** Real email campaigns are confounded. This simulation teaches you:
+- How confounding creates bias (naive effect: 16.0% vs true: 9.5%)
+- Why you need causal inference methods
+- How to validate methods against known truth
+
+### 6. Load and Explore Data Programmatically
 ```python
 import sys
 sys.path.append('src/data/')
@@ -227,6 +250,141 @@ model.fit(X_scaled, y)
 print("Feature importance:", dict(zip(features, model.coef_[0])))
 ```
 
+### Email Campaign Simulation with Confounding (`src/data/simulate_email_campaigns.py`)
+
+This simulation creates **realistic email marketing scenarios** with confounding and a true causal effect, perfect for learning and testing causal inference methods.
+
+#### Why This Simulation Matters
+
+In the real world, email campaigns are **NOT sent randomly**. Companies target customers based on:
+- Recent purchase history
+- Customer value (RFM score)
+- Engagement levels
+- Risk of churning
+
+This creates **CONFOUNDING** - systematic differences between customers who receive emails and those who don't. Naive comparisons will be **severely biased**!
+
+#### Simulation Design
+
+**Confounding Rules (Email Assignment):**
+Customers are more likely to receive emails if they are:
+- **Recent purchasers** (bought in last 2 weeks): 60% chance
+- **Frequent buyers** (>10 past purchases): 50% chance
+- **High-value customers** (AOV > £20): 55% chance
+- **Lapsed customers** (30-60 days since purchase): 40% chance
+- **Base rate**: 15% for everyone
+
+**True Causal Effect:**
+- **Base effect**: +10 percentage points increase in purchase probability
+- **Interaction**: Stronger effect for medium RFM scores (8-12): +5 pp
+- **Heterogeneity**: Weaker for high RFM (>12): +2 pp, Negative for low RFM (<8): -3 pp
+- **Random noise**: Realistic variation in effects
+
+#### Key Results from Simulation
+
+**Confounding Verification:**
+- Email send rate: **81.7%** (highly selective!)
+- Recent buyers: 95.1% receive emails
+- Frequent buyers: 95.0% receive emails
+- Other customers: only 18.2% receive emails
+
+**Naive vs True Effect:**
+- **Naive observed effect**: 16.0% (BIASED!)
+- **True causal effect**: 9.5% (close to ground truth)
+- **Bias**: 6.5 percentage points (68% overestimate!)
+
+**Why the Bias?**
+- Email recipients already have higher baseline purchase probability
+- Comparing email vs no-email compares different customer types
+- This is **selection bias**, not a valid test of email effectiveness
+
+**Heterogeneous Effects (By RFM Score):**
+- Low RFM (3-7): 5.4% effect
+- **Medium RFM (8-12): 12.2% effect** ← Strongest!
+- High RFM (13-15): 10.5% effect
+
+**Business Insight:** Customers with medium engagement (familiar but not yet loyal) respond best to email marketing!
+
+#### Files Created
+
+1. **`simulated_email_campaigns.csv`** (17 MB, 137,888 observations)
+   - Contains: email assignments, observed outcomes, counterfactuals, and true treatment effects
+   - Columns: `received_email`, `email_assignment_probability`, `purchased_this_week_observed`, `individual_treatment_effect`, etc.
+
+2. **`ground_truth.json`**
+   - True parameters for validation
+   - Base effect: 10%, interaction effects by RFM segment
+
+3. **`simulation_summary.json`**
+   - Quick statistics: confounding detected, email rates, effect sizes
+
+4. **`notebooks/02_email_campaign_simulation.ipynb`**
+   - Comprehensive explanation with visualizations
+   - Demonstrates confounding, naive vs true effects
+   - Shows how to recover causal effect from confounded data
+
+#### Example Usage
+
+```python
+import pandas as pd
+import json
+
+# Load simulated data
+sim_data = pd.read_csv('data/processed/simulated_email_campaigns.csv')
+
+# Show confounding
+print(f"Email recipients: {sim_data['received_email'].mean():.1%}")
+print(f"RFM (email group): {sim_data[sim_data['received_email']]['rfm_score'].mean():.2f}")
+print(f"RFM (no email): {sim_data[~sim_data['received_email']]['rfm_score'].mean():.2f}")
+
+# Naive vs true effect
+naive_effect = (
+    sim_data[sim_data['received_email']]['purchased_this_week_observed'].mean() -
+    sim_data[~sim_data['received_email']]['purchased_this_week_observed'].mean()
+)
+true_effect = sim_data['individual_treatment_effect'].mean()
+
+print(f"\nNaive effect: {naive_effect:.1%} (biased)")
+print(f"True effect: {true_effect:.1%} (causal)")
+print(f"Bias: {naive_effect - true_effect:.1%}")
+
+# Load ground truth
+with open('data/processed/ground_truth.json', 'r') as f:
+    ground_truth = json.load(f)
+    print(f"Ground truth: +{ground_truth['base_email_effect']*100:.1f}%")
+```
+
+#### Running the Simulation
+
+```bash
+# Generate simulated email campaigns
+.venv/bin/python src/data/simulate_email_campaigns.py
+
+# Explore the simulation in notebook
+jupyter notebook notebooks/02_email_campaign_simulation.ipynb
+```
+
+#### Learning Objectives
+
+This simulation teaches:
+1. **Confounding is everywhere** in marketing data
+2. **Naive comparisons are dangerously biased**
+3. **Causal inference methods** can recover true effects
+4. **Heterogeneous treatment effects** matter for targeting
+5. **Counterfactuals** are the foundation of causal inference
+
+#### Next Steps for Causal Inference
+
+Now that we have realistic confounding and a known true effect, we can test methods to recover the 9.5% causal effect:
+
+1. **Propensity Score Matching**: Match similar customers across email/no-email groups
+2. **Inverse Probability Weighting**: Weight observations by inverse propensity to receive email
+3. **Regression Adjustment**: Control for confounding variables
+4. **Double Machine Learning**: ML-based causal inference
+5. **Difference-in-Differences**: Use before/after variations
+
+Each method should recover the true effect (9.5%) from the biased naive estimate (16.0%)!
+
 ## 📊 Sample Analysis Results
 
 Based on the initial EDA:
@@ -245,34 +403,80 @@ Based on the initial EDA:
 
 ## 🔬 Next Steps
 
-The panel dataset is now **ready for causal inference modeling**. Here are the next steps:
+The project now includes **realistic email campaign simulation with confounding**, ready for causal inference learning and testing!
 
-1. **Causal Impact Analysis** (Ready to implement!)
-   - **Difference-in-Differences (DiD)**: Compare customers who received email campaigns vs. control groups over time
-   - **Synthetic Control Method**: Create synthetic counterfactuals for customers who received campaigns
-   - **Propensity Score Matching**: Match customers based on observable characteristics before analyzing treatment effects
+### ✅ **Completed: Email Campaign Simulation**
 
-2. **Email Marketing Campaign Simulation**
-   - **Treatment Definition**: Define email marketing exposure (e.g., promotional emails, newsletter campaigns)
-   - **Pre/Post Analysis**: Analyze purchase behavior before and after campaign exposure
-   - **Incremental Lift Measurement**: Quantify the additional purchases attributable to email marketing
+We've created a **realistic simulation** where:
+- Email assignment is **confounded** (based on customer characteristics)
+- True causal effect is **known** (10% base + RFM interactions)
+- Ground truth is **saved** for validation
+- **Naive analysis is biased** (16.0% observed vs 9.5% true effect)
 
-3. **Advanced Causal Inference Models**
-   - **Uplift Modeling**: Predict the incremental effect of email campaigns on individual customers
-   - **Bayesian Causal Forests**: Flexible non-parametric approach for heterogeneous treatment effects
-   - **Instrumental Variable Analysis**: If instrumental variables can be identified (e.g., send time randomness)
-   - **Regression Discontinuity**: If campaigns target customers based on thresholds (e.g., RFM score)
+This is perfect for **learning causal inference methods** without the complexity of real-world data!
 
-4. **Feature Engineering for Causal Analysis**
-   - **Lagged Features**: Add more lag variables (e.g., 2-week, 4-week rolling averages)
-   - **Seasonal Features**: Add week-of-year indicators to control for seasonality
-   - **Customer Segmentation**: Include RFM segments as covariates
-   - **Interaction Terms**: Test interactions between features (e.g., days_since_last_purchase × rfm_score)
+---
 
-5. **Visualization & Reporting**
-   - **Treatment Effect Plots**: Visualize causal effects across customer segments
-   - **Cohort Analysis**: Track customer behavior over time
-   - **Campaign ROI Dashboards**: Show return on investment for different email strategies
+### 🚀 **Ready to Implement: Causal Inference Methods**
+
+Test methods to recover the **true 9.5% effect** from confounded data:
+
+1. **Propensity Score Matching** (Easiest to start!)
+   - Match customers with similar characteristics
+   - Compare email recipients to similar non-recipients
+   - Should recover ~9.5% effect
+
+2. **Inverse Probability Weighting (IPW)**
+   - Weight observations by inverse propensity to receive email
+   - Corrects for selection bias
+   - Robust to model misspecification
+
+3. **Regression Adjustment**
+   - Include confounding variables as controls
+   - Linear/logistic regression with treatment indicator
+   - Simple but relies on correct model
+
+4. **Double Machine Learning (DML)**
+   - Use ML to control for confounding
+   - Residuals-on-residuals approach
+   - Flexible, handles non-linearities
+
+5. **Difference-in-Differences**
+   - Use before/after variation
+   - Compare changes over time
+   - Controls for time-invariant confounders
+
+### 📊 **Validation Approach**
+
+For each method:
+1. Apply to `simulated_email_campaigns.csv`
+2. Compare estimate to **ground truth** (9.5%)
+3. Measure bias and variance
+4. Test on different customer segments
+5. Analyze heterogeneous effects
+
+### 💡 **Business Applications**
+
+Once methods are validated:
+- **Measure true ROI** of email campaigns
+- **Optimize targeting** based on heterogeneous effects
+- **Personalize frequency** by customer segment
+- **A/B test strategies** with causal inference
+
+### 🎯 **Learning Path**
+
+1. **Understand confounding** (Notebook 02)
+2. **Implement PSM** (start here!)
+3. **Try IPW and regression**
+4. **Advance to DML**
+5. **Apply to real data**
+
+### 📈 **Key Insights from Simulation**
+
+- **Medium RFM customers** respond best (12.2% effect)
+- **Confounding creates 68% bias** (16.0% vs 9.5%)
+- **Targeting strategies** matter for ROI
+- **Causal inference is essential** for marketing measurement
 
 ## 📦 Dependencies
 
