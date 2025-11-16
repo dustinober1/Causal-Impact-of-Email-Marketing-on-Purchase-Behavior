@@ -1118,6 +1118,14 @@ This project now implements **6 comprehensive causal inference methods** for ana
 - **Method Comparison**: PSM and AIPW most reliable
 - **Key Learning**: Results moderately robust but interpret with caution
 
+#### 8. **Business Analysis** - STRATEGY & ROI
+- **Script**: `src/causal/business_analysis.py` (23 KB)
+- **ROI Range**: 49,922% to 103,677% (astronomical returns!)
+- **Best Segments**: Loyal (Q4, 18.6% uplift), Medium RFM (17.1%)
+- **Policy Simulator**: 3 targeting scenarios tested
+- **Recommendation**: Email ALL customers (81.7% rate optimal)
+- **Expected Impact**: +$1.52M profit (+21.7% improvement)
+
 ### 📊 **Method Comparison Summary**
 
 | Method | Estimate | Bias | Rank | Use Case |
@@ -1139,7 +1147,8 @@ This project now implements **6 comprehensive causal inference methods** for ana
 4. ✅ `INVERSE_PROBABILITY_WEIGHTING_SUMMARY.md` (14 KB) - IPW with weight diagnostics
 5. ✅ `METHOD_COMPARISON_SUMMARY.md` (18 KB) - **Complete comparison of all 6 methods**
 6. ✅ `ROBUSTNESS_ANALYSIS_SUMMARY.md` (16 KB) - **Sensitivity testing and validation**
-7. ✅ `PROJECT_EXECUTION_SUMMARY.md` (14 KB) - Full project overview
+7. ✅ `BUSINESS_ANALYSIS_SUMMARY.md` (18 KB) - **ROI analysis and strategic recommendations**
+8. ✅ `PROJECT_EXECUTION_SUMMARY.md` (14 KB) - Full project overview
 
 ### 🎯 **Final Results**
 
@@ -1154,6 +1163,9 @@ This project now implements **6 comprehensive causal inference methods** for ana
 3. Causal inference is essential (naive = 16% is 68% too high!)
 4. PSM performs best for this data structure
 5. DiD fails due to wrong study design
+6. **Business Impact**: Email marketing is extremely profitable (ROI 50,000-104,000%)
+7. **Optimal Strategy**: Email 81.7% of customers, prioritize loyal and medium-RFM segments
+8. **Expected Improvement**: +$1.52M profit (+21.7%) with targeted personalization
 
 ### 🚀 **Execute All Methods**
 
@@ -1177,7 +1189,10 @@ python src/causal/doubly_robust.py
 
 # 6. Robustness Analysis (sensitivity testing)
 python src/causal/robustness_analysis.py
+
+# 7. Business Analysis (strategy & ROI)
+python src/causal/business_analysis.py
 ```
 
 Compare results in `METHOD_COMPARISON_SUMMARY.md`!
-**New**: Run `robustness_analysis.py` for comprehensive sensitivity testing!
+**Business Insights**: Run `business_analysis.py` for ROI calculations and targeting strategy!
