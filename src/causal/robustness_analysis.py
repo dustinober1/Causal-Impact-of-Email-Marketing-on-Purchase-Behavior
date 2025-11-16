@@ -11,7 +11,7 @@ Robustness Tests Include:
 4. Method comparison: Side-by-side table
 5. Visualization: All methods vs ground truth
 
-Author: Claude Code
+Author: Causal Inference Research Team
 Date: 2025-11-16
 """
 

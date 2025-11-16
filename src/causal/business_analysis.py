@@ -13,7 +13,7 @@ Business Metrics Calculated:
 - ROI by segment
 - Policy recommendations
 
-Author: Claude Code
+Author: Causal Inference Research Team
 Date: 2025-11-16
 """
 
